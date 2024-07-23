@@ -9,7 +9,6 @@ library(tidyverse)
 library(ggpubr)
 
 
-
 # SST analysis ####
 
 sst <- read.csv("sst_df.csv")
@@ -67,14 +66,9 @@ Anom_sst <- Anom_sst %>%
   select(-min_sst, -max_sst)
 Anom_sst
 
-
-#filter the period 1970 - 2020 and select year and mean_sst
-sst <- temp %>%
-  filter(year >= 1970 & year <= 2020)
-sst
-
 # save sst anomalies data as sst for easier manipulation
 sst <- Anom_sst
+
 # load landing data
 
 catch <- read.csv("landings_data.csv")
@@ -105,99 +99,21 @@ total
 
 ## Correlation #
 
-## check for outliers in the data
+## remove outliers in the data
 
 # save the object as object in order not to modify the original dataframe
 dublicate <- total
 
-## ATHERINIDAE ~ NO REASON TO REMOVE THE OUTLIER after data transformation
 
-ggplot(catch_wide,aes(y=Atherinidae)) +
-  geom_boxplot()      ##  no outlier
-
-ggplot(dublicate,aes(y=Atherinidae)) +
-  geom_boxplot()      ##  no outlier
-
-
-
-#### ANCHOVY ~ NO REASON TO REMOVE THE OUTLIERS (normal fluctuations of the population)
-
-ggplot(dublicate,aes(y=`Engraulis encrasicolus`)) +
-  geom_boxplot()      ## 8 outlier
-
-ggplot(catch_wide,aes(y=`Engraulis encrasicolus`)) +
-  geom_boxplot()      ## 3 outlier
-
-
-
-######### LOPHIUS SPP ~ NO REASON TO REMOVE THE OUTLIERS
-
-ggplot(dublicate,aes(y=`Lophius spp`)) +
-  geom_boxplot()      ## 1 outlier
-ggplot(catch_wide,aes(y=`Lophius spp`)) +
-  geom_boxplot()      ## 1 outlier
-
-
-
-
-#### EUR HAKE ~ 2 outliers (REMOVE the one at 1982)
-
-ggplot(dublicate,aes(y=`Merluccius merluccius`)) +
-  geom_boxplot()      ## 2 outlier
-ggplot(catch_wide,aes(y=`Merluccius merluccius`)) +
-  geom_boxplot()      ## 2 outlier
-
-
-## remove the outlier in the year 1982
+## remove the outlier in the year 1982 #hake
 outliers_hake <- boxplot.stats(dublicate$`Merluccius merluccius`)$out
 dublicate[dublicate$`Merluccius merluccius` %in% outliers_hake & dublicate$year == 1982, "Merluccius merluccius"] <- NA
 
 
-### MUSTELUS SPP ~ outlier 1982 (REMOVE)
-
-ggplot(dublicate,aes(y=`Mustelus spp`)) +
-  geom_boxplot()      ## 1 outlier
-ggplot(catch_wide,aes(y=`Mustelus spp`)) +
-  geom_boxplot()      ## 1 outlier
+### remove the outlier in year 1982 Mustelus spp 
 
 outlier_mus <- boxplot.stats(dublicate$`Mustelus spp`)$out
 dublicate[dublicate$`Mustelus spp` %in% outlier_mus, "Mustelus spp"] <- NA
-
-
-
-## PARAPENAEUS LONGIROSTRIS ~ reduction of outliers after log transform (no reason to remove the outliers - normal increase of the species abundance)
-
-ggplot(dublicate,aes(y=`Parapenaeus longirostris`)) +
-  geom_boxplot()      ## 3 outlier
-
-ggplot(catch_wide,aes(y=`Parapenaeus longirostris`)) +
-  geom_boxplot()      ## several outliers
-
-
-### RAJIFORMES ~ reduction of outliers after log transform
-
-ggplot(catch_wide,aes(y=Rajiformes)) +
-  geom_boxplot()      ## 2 outlier
-
-ggplot(dublicate,aes(y=Rajiformes)) +
-  geom_boxplot()      ## no outlier after log transform
-
-
-#### SCOMBER ~ NO EVIDENCE TO REMOVE OUTLIER
-
-ggplot(dublicate,aes(y=`Scomber spp`)) +
-  geom_boxplot()      ## 1 outlier
-ggplot(catch_wide,aes(y=`Scomber spp`)) +
-  geom_boxplot()      ## 2 outlier
-
-
-
-## SCOPHTHALMIDAE  ~ OUTLIER after transformation
-
-ggplot(dublicate,aes(y=Scophthalmidae)) +
-  geom_boxplot()      ## 2 outlier
-ggplot(catch_wide,aes(y=Scophthalmidae)) +
-  geom_boxplot()      ## no outlier
 
 
 
@@ -213,216 +129,102 @@ names(dublicate) <- gsub(" ", "_", names(dublicate), fixed = TRUE)
 ### perform correlation analyses
 
 #Atherinidae
-cor_ather <- cor.test(dublicate$atherinidae, dublicate$mean_sst,  method="pearson")
-cor_ather
-
 ccf_ather_2 <- ccf(dublicate$mean_sst, dublicate$atherinidae, lag.max = 2, na.action = na.pass)
 
-
 #Boops boops
-cor_boopboo <- cor.test(dublicate$boops_boops, dublicate$mean_sst,  method="pearson")
-cor_boopboo
-
 ccf_boopboo_2 <- ccf(dublicate$mean_sst, dublicate$boops_boops, lag.max = 2, na.action = na.pass)
 
 
-
 #Chamelea gallina
-cor_chamgal <- cor.test(dublicate$chamelea_gallina, dublicate$mean_sst,  method="pearson")
-cor_chamgal
-
 ccf_chamgal_2 <- ccf(dublicate$mean_sst, dublicate$chamelea_gallina, lag.max = 2, na.action = na.pass)
 
 
-
 #anchovy
-cor_engrenc <- cor.test(dublicate$engraulis_encrasicolus, dublicate$mean_sst,  method="pearson")
-cor_engrenc
-
-
 ccf_engrenc_2 <- ccf(dublicate$mean_sst, dublicate$engraulis_encrasicolus, lag.max = 2, na.action = na.pass)
 
 
 #squids
-cor_squids <- cor.test(dublicate$`loliginidae,_ommastrephidae`, dublicate$mean_sst,  method="pearson")
-cor_squids
-
-
 ccf_squids_2 <- ccf(dublicate$mean_sst, dublicate$`loliginidae,_ommastrephidae`, lag.max = 2, na.action = na.pass)
 
-
 #lophius
-cor_lophius <- cor.test(dublicate$lophius_spp, dublicate$mean_sst,  method="pearson")
-cor_lophius
-
-
 ccf_lophius_2 <- ccf(dublicate$mean_sst, dublicate$lophius_spp, lag.max = 2, na.action = na.pass)
-ccf_lophius_2
+
 
 # Merlucius merlucius
-
-mermer <- cor.test(dublicate$merluccius_merluccius, dublicate$mean_sst,  method="pearson")
-mermer
-
 ccf_mermer_2 <- ccf(dublicate$mean_sst, dublicate$merluccius_merluccius, lag.max = 2, na.action = na.pass)
 
 
 #micromesistius poutasou
-cor_micmpou <- cor.test(dublicate$micromesistius_poutassou, dublicate$mean_sst,  method="pearson")
-cor_micmpou
-
-
 ccf_micmpou_2 <- ccf(dublicate$mean_sst, dublicate$micromesistius_poutassou, lag.max = 2, na.action = na.pass)
-ccf_micmpou_2
-
 
 
 #mugilidae
-cor_mugil <- cor.test(dublicate$mugilidae, dublicate$mean_sst,  method="pearson")
-cor_mugil
-
 ccf_mugil_2 <- ccf(dublicate$mean_sst, dublicate$mugilidae, lag.max = 2, na.action = na.pass)
-
-print(ccf_mugil_2)
 
 
 #mullus
-cor_mullus <- cor.test(dublicate$mullus_spp, dublicate$mean_sst,  method="pearson")
-cor_mullus
-
 ccf_mullus_2 <- ccf(dublicate$mean_sst, dublicate$mullus_spp, lag.max = 2, na.action = na.pass)
 
 
-
 #mustelus
-cor_mustelus <- cor.test(dublicate$mustelus_spp, dublicate$mean_sst,  method="pearson")
-cor_mustelus
-
-
 ccf_mustelus_2 <- ccf(dublicate$mean_sst, dublicate$mustelus_spp, lag.max = 2, na.action = na.pass)
-ccf_mustelus_2
 
 
 #neprnor
-cor_neprnor <- cor.test(dublicate$nephrops_norvegicus, dublicate$mean_sst,  method="pearson")
-cor_neprnor
-
-
 ccf_neprnor_2 <- ccf(dublicate$mean_sst, dublicate$nephrops_norvegicus, lag.max = 2, na.action = na.pass)
-ccf_neprnor_2
-
 
 #octopus
-cor_octo <- cor.test(dublicate$octopodidea, dublicate$mean_sst,  method="pearson")
-cor_octo
-
 ccf_octo_2 <- ccf(dublicate$mean_sst, dublicate$octopodidea, lag.max = 2, na.action = na.pass)
-print(ccf_octo_2)
-
 
 #papelon
-cor_papelon <- cor.test(dublicate$parapenaeus_longirostris, dublicate$mean_sst,  method="pearson")
-cor_papelon
-
 ccf_papelon_2 <- ccf(dublicate$mean_sst, dublicate$parapenaeus_longirostris, lag.max = 2, na.action = na.pass)
-print(ccf_papelon_2)
-
 
 #rajiformes
-cor_rays <- cor.test(dublicate$rajiformes, dublicate$mean_sst,  method="pearson")
-cor_rays
-
 ccf_rays_2 <- ccf(dublicate$mean_sst, dublicate$rajiformes, lag.max = 2, na.action = na.pass)
-print(ccf_rays_2)
-
 
 #sardina
-cor_sardina <- cor.test(dublicate$sardina_pilchardus, dublicate$mean_sst,  method="pearson")
-cor_sardina
-
 ccf_sardina_2 <- ccf(dublicate$mean_sst, dublicate$sardina_pilchardus, lag.max = 2, na.action = na.pass)
-print(ccf_sardina_2)
 
 #sardinella
-cor_sardinella <- cor.test(dublicate$sardinella_aurita, dublicate$mean_sst,  method="pearson")
-cor_sardinella
-
 ccf_sardinella_2 <- ccf(dublicate$mean_sst, dublicate$sardinella_aurita, lag.max = 2, na.action = na.pass)
-print(ccf_sardinella_2)
 
 
 #scomber
-cor_scomber <- cor.test(dublicate$scomber_spp, dublicate$mean_sst,  method="pearson")
-cor_scomber
-
 ccf_scomber_2 <- ccf(dublicate$mean_sst, dublicate$scomber_spp, lag.max = 2, na.action = na.pass)
-print(ccf_scomber_2)
 
 #scophthalmidae
-cor_scophthalmidae <- cor.test(dublicate$scophthalmidae, dublicate$mean_sst,  method="pearson")
-cor_scophthalmidae
 
 ccf_scophthalmidae_2 <- ccf(dublicate$mean_sst, dublicate$scophthalmidae, lag.max = 2, na.action = na.pass)
-print(ccf_scophthalmidae_2)
 
 #scorpaenidae
-cor_scorpaenidae <- cor.test(dublicate$scorpaenidae, dublicate$mean_sst,  method="pearson")
-cor_scorpaenidae
-
-
 ccf_scorpaenidae_2 <- ccf(dublicate$mean_sst, dublicate$scorpaenidae, lag.max = 2, na.action = na.pass)
-print(ccf_scorpaenidae_2)
 
 
 #sepiidae
-cor_sepia <- cor.test(dublicate$`sepiidae,_sepiolidae`, dublicate$mean_sst,  method="pearson")
-cor_sepia
-
 ccf_sepia_2 <- ccf(dublicate$mean_sst, dublicate$`sepiidae,_sepiolidae`, lag.max = 2, na.action = na.pass)
-print(ccf_sepia_2)
 
 #sole
-cor_solesol <- cor.test(dublicate$solea_solea, dublicate$mean_sst,  method="pearson")
-cor_solesol
-
 ccf_solesol_2 <- ccf(dublicate$mean_sst, dublicate$solea_solea, lag.max = 2, na.action = na.pass)
-print(ccf_solesol_2)
+
 
 
 #spicara
-cor_spicara <- cor.test(dublicate$spicara_spp, dublicate$mean_sst,  method="pearson")
-cor_spicara
-
 ccf_spicara_2 <- ccf(dublicate$mean_sst, dublicate$spicara_spp, lag.max = 2, na.action = na.pass)
-print(ccf_spicara_2)
+
 
 #squalus
-cor_squalus <- cor.test(dublicate$squalus_spp, dublicate$mean_sst,  method="pearson")
-cor_squalus
-
 ccf_squalus_2 <- ccf(dublicate$mean_sst, dublicate$squalus_spp, lag.max = 2, na.action = na.pass)
-print(ccf_squalus_2)
+
 
 #squilla mantis
-cor_squiman <- cor.test(dublicate$squilla_mantis, dublicate$mean_sst,  method="pearson")
-cor_squiman
-
 ccf_squiman_2 <- ccf(dublicate$mean_sst, dublicate$squilla_mantis, lag.max = 2, na.action = na.pass)
-print(ccf_squiman_2)
+
 
 #trachurus
-cor_trachurus <- cor.test(dublicate$trachurus_spp, dublicate$mean_sst,  method="pearson")
-cor_trachurus
-
 ccf_trachurus_2 <- ccf(dublicate$mean_sst, dublicate$trachurus_spp, lag.max = 2, na.action = na.pass)
-print(ccf_trachurus_2)
 
 #triglidae
-cor_triglidae <- cor.test(dublicate$triglidae, dublicate$mean_sst,  method="pearson")
-cor_triglidae
-
 ccf_triglidae_2 <- ccf(dublicate$mean_sst, dublicate$triglidae, lag.max = 2, na.action = na.pass)
-print(ccf_triglidae_2)
 
 
 ## PCA correlation
@@ -432,28 +234,17 @@ print(ccf_triglidae_2)
 final_df <- merge(dublicate, pca_pc, by = "year")
 final_df
 
-
 # PC 1
-cor_pc1 <- cor.test(final_df$Axis1, final_df$mean_sst,  method="pearson")
-cor_pc1
-
 ccf_pc1_2 <- ccf(final_df$mean_sst, final_df$Axis1, lag.max = 2, na.action = na.pass)
 print(ccf_pc1_2)
 
 
 # PC 2
-
-cor_pc2 <- cor.test(final_df$Axis2, final_df$mean_sst,  method="pearson")
-cor_pc2
-
-
 ccf_pc2_2 <- ccf(final_df$mean_sst, final_df$Axis2, lag.max = 2, na.action = na.pass)
 print(ccf_pc2_2)
 
 
-### Chelton validation method
-
-
+### Chelton validation method ####
 # Function to replace NA with mean of values before and after
 replace_na_with_mean <- function(x) {
   na_indices <- which(is.na(x))
@@ -471,7 +262,6 @@ final_df <- lapply(final_df, replace_na_with_mean)
 final_df <- as.data.frame(final_df)
 
 ## Atherinidae
-
 # Calculate the correlation coefficient between mean_sst and atherinidae
 cor_ather <- cor.test(final_df$mean_sst, final_df$atherinidae, use = "complete.obs")
 cor_obs <- cor_ather$estimate # Observed correlation coefficient
@@ -506,7 +296,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 ## Boops boops
-
 # Calculate the correlation coefficient between mean_sst and boops boops
 cor_boopboo <- cor.test(final_df$mean_sst, final_df$boops_boops, use = "complete.obs")
 cor_obs <- cor_boopboo$estimate # Observed correlation coefficient
@@ -576,7 +365,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Lophius spp
-
 # Calculate the correlation coefficient between mean_sst and squids
 cor_lophius <- cor.test(final_df$mean_sst, final_df$lophius_spp, use = "complete.obs")
 cor_obs <- cor_lophius$estimate # Observed correlation coefficient
@@ -610,7 +398,6 @@ if (abs(cor_obs) > r_crit) {
 }
 
 # Micromesistius poutassou
-
 # Calculate the correlation coefficient between mean_sst and MICMPOU
 cor_micmpou <- cor.test(final_df$mean_sst, final_df$micromesistius_poutassou, use = "complete.obs")
 cor_obs <- cor_micmpou$estimate # Observed correlation coefficient
@@ -645,7 +432,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Mullus sp
-
 # Calculate the correlation coefficient between mean_sst and Mullus spp
 cor_mullus <- cor.test(final_df$mean_sst, final_df$mullus_spp, use = "complete.obs")
 cor_obs <- cor_mullus$estimate # Observed correlation coefficient
@@ -679,7 +465,6 @@ if (abs(cor_obs) > r_crit) {
 }
 
 # Mustelus
-
 # Calculate the correlation coefficient between mean_sst and Mustelus
 cor_mustelus <- cor.test(final_df$mean_sst, final_df$mustelus_spp, use = "complete.obs")
 cor_obs <- cor_mustelus$estimate # Observed correlation coefficient
@@ -714,8 +499,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Parapenaeus longirostris
-
-
 # Calculate the correlation coefficient between mean_sst and papelon
 cor_papelon <- cor.test(final_df$mean_sst, final_df$parapenaeus_longirostris, use = "complete.obs")
 cor_obs <- cor_papelon$estimate # Observed correlation coefficient
@@ -750,7 +533,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Rajiformes
-
 # Calculate the correlation coefficient between mean_sst and rajiformes
 cor_rays <- cor.test(final_df$mean_sst, final_df$rajiformes, use = "complete.obs")
 cor_obs <- cor_rays$estimate # Observed correlation coefficient
@@ -786,7 +568,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Sardinella aurita
-
 # Calculate the correlation coefficient between mean_sst and sardinella
 cor_sardinella <- cor.test(final_df$mean_sst, final_df$sardinella_aurita, use = "complete.obs")
 cor_obs <- cor_sardinella$estimate # Observed correlation coefficient
@@ -822,7 +603,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Scomber spp
-
 # Calculate the correlation coefficient between mean_sst and scomber
 cor_scomber <- cor.test(final_df$mean_sst, final_df$scomber_spp, use = "complete.obs")
 cor_obs <- cor_scomber$estimate # Observed correlation coefficient
@@ -857,7 +637,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Scophthalmidae
-
 # Calculate the correlation coefficient between mean_sst and scophthalmidae
 cor_scoph <- cor.test(final_df$mean_sst, final_df$scophthalmidae, use = "complete.obs")
 cor_obs <- cor_scoph$estimate # Observed correlation coefficient
@@ -892,7 +671,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Scorpaenidae
-
 # Calculate the correlation coefficient between mean_sst and scorpaenidae
 cor_scorpaenidae <- cor.test(final_df$mean_sst, final_df$scorpaenidae, use = "complete.obs")
 cor_obs <- cor_scorpaenidae$estimate # Observed correlation coefficient
@@ -928,7 +706,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Sepiidae, Sepiolidae
-
 # Calculate the correlation coefficient between mean_sst and sepiidae
 cor_sepia <- cor.test(final_df$mean_sst, final_df$sepiidae._sepiolidae, use = "complete.obs")
 cor_obs <- cor_sepia$estimate # Observed correlation coefficient
@@ -963,7 +740,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Solea solea
-
 # Calculate the correlation coefficient between mean_sst and sepiidae
 cor_solea <- cor.test(final_df$mean_sst, final_df$solea_solea, use = "complete.obs")
 cor_obs <- cor_solea$estimate # Observed correlation coefficient
@@ -999,7 +775,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Spicara
-
 # Calculate the correlation coefficient between mean_sst and spicara
 cor_spicara <- cor.test(final_df$mean_sst, final_df$spicara_spp, use = "complete.obs")
 cor_obs <- cor_spicara$estimate # Observed correlation coefficient
@@ -1034,7 +809,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Squalus
-
 # Calculate the correlation coefficient between mean_sst and squalus
 cor_squalus <- cor.test(final_df$mean_sst, final_df$squalus_spp, use = "complete.obs")
 cor_obs <- cor_squalus$estimate # Observed correlation coefficient
@@ -1068,9 +842,7 @@ if (abs(cor_obs) > r_crit) {
 }
 
 
-
 # Trachurus spp
-
 # Calculate the correlation coefficient between mean_sst and trachurus
 cor_trachurus <- cor.test(final_df$mean_sst, final_df$trachurus_spp, use = "complete.obs")
 cor_obs <- cor_trachurus$estimate # Observed correlation coefficient
@@ -1105,7 +877,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # Triglidae
-
 # Calculate the correlation coefficient between mean_sst and triglidae
 cor_triglidae <- cor.test(final_df$mean_sst, final_df$triglidae, use = "complete.obs")
 cor_obs <- cor_triglidae$estimate # Observed correlation coefficient
@@ -1140,7 +911,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # PC1
-
 # Calculate the correlation coefficient between mean_sst and PC1
 cor_pc1 <- cor.test(final_df$mean_sst, final_df$Axis1, use = "complete.obs")
 cor_obs <- cor_pc1$estimate # Observed correlation coefficient
@@ -1175,7 +945,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # PC2
-
 # Calculate the correlation coefficient between mean_sst and PC1
 cor_pc2 <- cor.test(final_df$mean_sst, final_df$Axis2, use = "complete.obs")
 cor_obs <- cor_pc2$estimate # Observed correlation coefficient
@@ -1210,7 +979,6 @@ if (abs(cor_obs) > r_crit) {
 
 
 # barplot
-
 # Create a data frame with the results of the correlation analysis
 df_sst <- data.frame(
   species = c("Atherinidae", "Boops boops", "Loliginidae, Ommastrephidae", "Lophius spp", "Micromesistius poutassou", "Mullus spp", "Mustelus spp", "Parapenaeus longirostris", "Sardinella aurita", "Scomber spp", "Scophthalmidae", "Sepiidae, Sepiolidae", "Solea solea", "Spicara spp", "Squalus spp", "Trachurus spp", "Triglidae","PC1"),
@@ -1271,7 +1039,6 @@ sst_anomalies
 nao_data <- read_csv("winter_nao_data.csv")
 View(nao_data)
 
-
 nao_plot <- ggplot(nao_data, aes(x = year, y = winter_nao_index, fill = winter_nao_index >= 0)) +
   geom_col(col = "black", width = 0.7) +
   geom_hline(yintercept = 0, color = "black", linetype = "solid") +
@@ -1287,7 +1054,6 @@ nao_plot <- ggplot(nao_data, aes(x = year, y = winter_nao_index, fill = winter_n
 
 nao_plot
 
-
 # merge nao_data with final_df
 
 final_df <- merge(nao_data, final_df, by = "year")
@@ -1297,7 +1063,6 @@ View(final_df)
 # Correlation and significance test (Chelton Method)
 
 ## Atherinidae
-
 ccf_ather_2 <- ccf(final_df$nao_index, final_df$atherinidae, lag.max = 2, na.action = na.pass)
 ccf_ather_2
 
@@ -2457,1321 +2222,6 @@ amo_plot <- ggplot(amo_data, aes(x = year, y = amo_index, fill = amo_index >= 0)
 amo_plot
 
 
-
-# merge amo_data with the existing final_df
-
-final_df <- merge(amo_data, final_df, by = "year")
-View(final_df)
-
-
-# Correlation
-
-## Atherinidae
-
-ggscatter(final_df, x = "amo_index", y = "atherinidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Atherinidae landings")
-
-
-ccf_ather_2 <- ccf(final_df$amo_index, final_df$atherinidae, lag.max = 2, na.action = na.pass)
-ccf_ather_2
-
-# Calculate the correlation coefficient between amo_index and atherinidae
-cor_ather <- cor.test(final_df$amo_index, final_df$atherinidae, use = "complete.obs")
-cor_obs <- cor_ather$estimate # Observed correlation coefficient
-p_value <- cor_ather$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_ath <- acf(final_df$atherinidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$atherinidae))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_ath$acf[2:(n_lag + 1)] # Autocorrelation values for atherinidae
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-## Boops boops
-
-ggscatter(final_df, x = "amo_index", y = "boops_boops", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-
-ccf_bb_2 <- ccf(final_df$amo_index, final_df$boops_boops, lag.max = 2, na.action = na.pass)
-ccf_bb_2
-
-
-# Calculate the correlation coefficient between amo_index and boops boops
-cor_boopboo <- cor.test(final_df$amo_index, final_df$boops_boops, use = "complete.obs")
-cor_obs <- cor_boopboo$estimate # Observed correlation coefficient
-p_value <- cor_boopboo$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_bb <- acf(final_df$boops_boops, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$boops_boops))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_bb$acf[2:(n_lag + 1)] # Autocorrelation values for boops boops
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-########################### chamelea gallina ##
-
-
-ggscatter(final_df, x = "amo_index", y = "chamelea_gallina", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_chamgal <- ccf(final_df$amo_index, final_df$chamelea_gallina, lag.max = 2, na.action = na.pass)
-ccf_chamgal
-
-# Calculate the correlation coefficient between amo_index and chamelea gallina
-cor_chamgal <- cor.test(final_df$amo_index, final_df$chamelea_gallina, use = "complete.obs")
-cor_obs <- cor_chamgal$estimate # Observed correlation coefficient
-p_value <- cor_chamgal$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_chamgal <- acf(final_df$chamelea_gallina, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$chamelea_gallina))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_chamgal$acf[2:(n_lag + 1)] # Autocorrelation values for chamelea gallina
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-########################### Anchovy ##
-
-
-ggscatter(final_df, x = "amo_index", y = "engraulis_encrasicolus", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_anchovy <- ccf(final_df$amo_index, final_df$engraulis_encrasicolus, lag.max = 2, na.action = na.pass)
-ccf_anchovy
-
-# Calculate the correlation coefficient between amo_index and anchovy
-cor_anchovy <- cor.test(final_df$amo_index, final_df$engraulis_encrasicolus, use = "complete.obs")
-cor_obs <- cor_anchovy$estimate # Observed correlation coefficient
-p_value <- cor_anchovy$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_anchovy <- acf(final_df$engraulis_encrasicolus, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$engraulis_encrasicolus))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_anchovy$acf[2:(n_lag + 1)] # Autocorrelation values for anchovy
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Loliginidae, Ommastrephidae
-
-ggscatter(final_df, x = "amo_index", y = "loliginidae._ommastrephidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_squids_2 <- ccf(final_df$amo_index, final_df$loliginidae._ommastrephidae, lag.max = 2, na.action = na.pass)
-ccf_squids_2
-
-# Calculate the correlation coefficient between amo_index and squids
-cor_squids <- cor.test(final_df$amo_index, final_df$loliginidae._ommastrephidae, use = "complete.obs")
-cor_obs <- cor_squids$estimate # Observed correlation coefficient
-p_value <- cor_squids$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_squid <- acf(final_df$loliginidae._ommastrephidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$`loliginidae,_ommastrephidae`))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_squid$acf[2:(n_lag + 1)] # Autocorrelation values for squids
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Lophius spp
-
-ggscatter(final_df, x = "amo_index", y = "lophius_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_lophius_2 <- ccf(final_df$amo_index, final_df$lophius_spp, lag.max = 2, na.action = na.pass)
-ccf_lophius_2
-
-# Calculate the correlation coefficient between amo_index and squids
-cor_lophius <- cor.test(final_df$amo_index, final_df$lophius_spp, use = "complete.obs")
-cor_obs <- cor_lophius$estimate # Observed correlation coefficient
-p_value <- cor_lophius$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_lophius <- acf(final_df$lophius_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$lophius_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_lophius$acf[2:(n_lag + 1)] # Autocorrelation values for lophius
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-########################### Hake ##
-
-
-ggscatter(final_df, x = "amo_index", y = "merluccius_merluccius", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_hake <- ccf(final_df$amo_index, final_df$merluccius_merluccius, lag.max = 2, na.action = na.pass)
-ccf_hake
-
-# Calculate the correlation coefficient between amo and hake
-cor_hake <- cor.test(final_df$amo_index, final_df$merluccius_merluccius, use = "complete.obs")
-cor_obs <- cor_hake$estimate # Observed correlation coefficient
-p_value <- cor_hake$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_hake <- acf(final_df$merluccius_merluccius, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$merluccius_merluccius))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo
-rho_yy <- acf_hake$acf[2:(n_lag + 1)] # Autocorrelation values for hake
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-# Micromesistius poutassou
-
-ggscatter(final_df, x = "amo_index", y = "micromesistius_poutassou", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_micmpou_2 <- ccf(final_df$amo_index, final_df$micromesistius_poutassou, lag.max = 2, na.action = na.pass)
-ccf_micmpou_2
-
-# Calculate the correlation coefficient between amo_index and MICMPOU
-cor_micmpou <- cor.test(final_df$amo_index, final_df$micromesistius_poutassou, use = "complete.obs")
-cor_obs <- cor_micmpou$estimate # Observed correlation coefficient
-p_value <- cor_micmpou$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_micmpou <- acf(final_df$micromesistius_poutassou, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$micromesistius_poutassou))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_micmpou$acf[2:(n_lag + 1)] # Autocorrelation values for MICMPOU
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-
-########################### Mugilidae ##
-
-
-ggscatter(final_df, x = "amo_index", y = "mugilidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_mugilidae <- ccf(final_df$amo_index, final_df$mugilidae, lag.max = 2, na.action = na.pass)
-ccf_mugilidae
-
-# Calculate the correlation coefficient between amo and mugilidae
-cor_mugilidae <- cor.test(final_df$amo_index, final_df$mugilidae, use = "complete.obs")
-cor_obs <- cor_mugilidae$estimate # Observed correlation coefficient
-p_value <- cor_mugilidae$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_mugilidae <- acf(final_df$mugilidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$mugilidae))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo
-rho_yy <- acf_mugilidae$acf[2:(n_lag + 1)] # Autocorrelation values for mugilidae
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Mullus sp
-
-ggscatter(final_df, x = "amo_index", y = "mullus_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_mullus_2 <- ccf(final_df$amo_index, final_df$mullus_spp, lag.max = 2, na.action = na.pass)
-ccf_mullus_2
-
-# Calculate the correlation coefficient between amo_index and Mullus spp
-cor_mullus <- cor.test(final_df$amo_index, final_df$mullus_spp, use = "complete.obs")
-cor_obs <- cor_mullus$estimate # Observed correlation coefficient
-p_value <- cor_mullus$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_mullus <- acf(final_df$mullus_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$mullus_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_mullus$acf[2:(n_lag + 1)] # Autocorrelation values for Mullus
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-# Mustelus
-
-ggscatter(final_df, x = "amo_index", y = "mustelus_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_mustelus_2 <- ccf(final_df$amo_index, final_df$mustelus_spp, lag.max = 2, na.action = na.pass)
-ccf_mustelus_2
-
-# Calculate the correlation coefficient between amo_index and Mustelus
-cor_mustelus <- cor.test(final_df$amo_index, final_df$mustelus_spp, use = "complete.obs")
-cor_obs <- cor_mustelus$estimate # Observed correlation coefficient
-p_value <- cor_mustelus$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_mustelus <- acf(final_df$mustelus_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$mustelus_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_mustelus$acf[2:(n_lag + 1)] # Autocorrelation values for Mustelus
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-########################### nephrops norvegicus ##
-
-
-ggscatter(final_df, x = "amo_index", y = "nephrops_norvegicus", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_nephrops <- ccf(final_df$amo_index, final_df$nephrops_norvegicus, lag.max = 2, na.action = na.pass)
-ccf_nephrops
-
-
-# Calculate the correlation coefficient between mean_sst and nephnor
-cor_nephnor <- cor.test(final_df$amo_index, final_df$nephrops_norvegicus, use = "complete.obs")
-cor_obs <- cor_nephnor$estimate # Observed correlation coefficient
-p_value <- cor_nephnor$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_nephnor <- acf(final_df$nephrops_norvegicus, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$nephrops_norvegicus))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo
-rho_yy <- acf_nephnor$acf[2:(n_lag + 1)] # Autocorrelation values for nephnor
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-########################### Octopodidea ##
-
-
-ggscatter(final_df, x = "amo_index", y = "octopodidea", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_octopus <- ccf(final_df$amo_index, final_df$octopodidea, lag.max = 2, na.action = na.pass)
-ccf_octopus
-
-# Calculate the correlation coefficient between amo and octopus
-cor_octopus <- cor.test(final_df$amo_index, final_df$octopodidea, use = "complete.obs")
-cor_obs <- cor_octopus$estimate # Observed correlation coefficient
-p_value <- cor_octopus$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_octopus <- acf(final_df$octopodidea, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$octopodidea))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo
-rho_yy <- acf_octopus$acf[2:(n_lag + 1)] # Autocorrelation values for octopus
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Parapenaeus longirostris
-
-ggscatter(final_df, x = "amo_index", y = "parapenaeus_longirostris", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_papelon_2 <- ccf(final_df$amo_index, final_df$parapenaeus_longirostris, lag.max = 2, na.action = na.pass)
-ccf_papelon_2
-
-# Calculate the correlation coefficient between amo_index and papelon
-cor_papelon <- cor.test(final_df$amo_index, final_df$parapenaeus_longirostris, use = "complete.obs")
-cor_obs <- cor_papelon$estimate # Observed correlation coefficient
-p_value <- cor_papelon$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_papelon <- acf(final_df$parapenaeus_longirostris, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$parapenaeus_longirostris))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_papelon$acf[2:(n_lag + 1)] # Autocorrelation values for papelon
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Rajiformes
-
-ggscatter(final_df, x = "amo_index", y = "rajiformes", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_rays_2 <- ccf(final_df$amo_index, final_df$rajiformes, lag.max = 2, na.action = na.pass)
-ccf_rays_2
-
-# Calculate the correlation coefficient between amo_index and rajiformes
-cor_rays <- cor.test(final_df$amo_index, final_df$rajiformes, use = "complete.obs")
-cor_obs <- cor_rays$estimate # Observed correlation coefficient
-p_value <- cor_rays$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_rays <- acf(final_df$rajiformes, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$rajiformes))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_rays$acf[2:(n_lag + 1)] # Autocorrelation values for rajiformes
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Sardina pilchardus
-
-ggscatter(final_df, x = "amo_index", y = "sardina_pilchardus", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_sardine <- ccf(final_df$amo_index, final_df$sardina_pilchardus, lag.max = 2, na.action = na.pass)
-ccf_sardine
-
-# Calculate the correlation coefficient between amo_index and sardine
-cor_sardine <- cor.test(final_df$amo_index, final_df$sardina_pilchardus, use = "complete.obs")
-cor_obs <- cor_sardine$estimate # Observed correlation coefficient
-p_value <- cor_sardine$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_sardine <- acf(final_df$sardina_pilchardus, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$sardina_pilchardus))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_sardine$acf[2:(n_lag + 1)] # Autocorrelation values for sardine
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-# Sardinella aurita
-
-ggscatter(final_df, x = "amo_index", y = "sardinella_aurita", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_sardinella_2 <- ccf(final_df$amo_index, final_df$sardinella_aurita, lag.max = 2, na.action = na.pass)
-ccf_sardinella_2
-
-# Calculate the correlation coefficient between amo_index and sardinella
-cor_sardinella <- cor.test(final_df$amo_index, final_df$sardinella_aurita, use = "complete.obs")
-cor_obs <- cor_sardinella$estimate # Observed correlation coefficient
-p_value <- cor_sardinella$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_sardinella <- acf(final_df$sardinella_aurita, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$sardinella_aurita))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_sardinella$acf[2:(n_lag + 1)] # Autocorrelation values for S.aurita
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-# Scomber spp
-
-ggscatter(final_df, x = "amo_index", y = "scomber_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_scomber_2 <- ccf(final_df$amo_index, final_df$scomber_spp, lag.max = 2, na.action = na.pass)
-ccf_scomber_2
-
-# Calculate the correlation coefficient between amo_index and scomber
-cor_scomber <- cor.test(final_df$amo_index, final_df$scomber_spp, use = "complete.obs")
-cor_obs <- cor_scomber$estimate # Observed correlation coefficient
-p_value <- cor_scomber$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_scomber <- acf(final_df$scomber_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$scomber_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_scomber$acf[2:(n_lag + 1)] # Autocorrelation values for Scomber
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Scophthalmidae
-
-ggscatter(final_df, x = "amo_index", y = "scophthalmidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_scophthalmidae_2 <- ccf(final_df$amo_index, final_df$scophthalmidae, lag.max = 2, na.action = na.pass)
-ccf_scophthalmidae_2
-
-# Calculate the correlation coefficient between amo_index and scophthalmidae
-cor_scoph <- cor.test(final_df$amo_index, final_df$scophthalmidae, use = "complete.obs")
-cor_obs <- cor_scoph$estimate # Observed correlation coefficient
-p_value <- cor_scoph$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_scoph <- acf(final_df$scophthalmidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$scophthalmidae))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_scoph$acf[2:(n_lag + 1)] # Autocorrelation values for scophthalmidae
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Scorpaenidae
-
-ggscatter(final_df, x = "amo_index", y = "scorpaenidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_scorpaenidae_2 <- ccf(final_df$amo_index, final_df$scorpaenidae, lag.max = 2, na.action = na.pass)
-ccf_scorpaenidae_2
-
-# Calculate the correlation coefficient between amo_index and scorpaenidae
-cor_scorpaenidae <- cor.test(final_df$amo_index, final_df$scorpaenidae, use = "complete.obs")
-cor_obs <- cor_scorpaenidae$estimate # Observed correlation coefficient
-p_value <- cor_scorpaenidae$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_scorpaenidae <- acf(final_df$scorpaenidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$scorpaenidae))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_scorpaenidae$acf[2:(n_lag + 1)] # Autocorrelation values for scorpaenidae
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Sepiidae, Sepiolidae
-
-ggscatter(final_df, x = "amo_index", y = "sepiidae._sepiolidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_sepia_2 <- ccf(final_df$amo_index, final_df$sepiidae._sepiolidae, lag.max = 2, na.action = na.pass)
-ccf_sepia_2
-
-# Calculate the correlation coefficient between amo_index and sepiidae
-cor_sepia <- cor.test(final_df$amo_index, final_df$sepiidae._sepiolidae, use = "complete.obs")
-cor_obs <- cor_sepia$estimate # Observed correlation coefficient
-p_value <- cor_sepia$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_sepia <- acf(final_df$sepiidae._sepiolidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$sepiidae._sepiolidae))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_sepia$acf[2:(n_lag + 1)] # Autocorrelation values for sepiidae
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Solea solea
-
-ggscatter(final_df, x = "amo_index", y = "solea_solea", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_sole_2 <- ccf(final_df$amo_index, final_df$solea_solea, lag.max = 2, na.action = na.pass)
-ccf_sole_2
-
-# Calculate the correlation coefficient between amo_index and sepiidae
-cor_solea <- cor.test(final_df$amo_index, final_df$solea_solea, use = "complete.obs")
-cor_obs <- cor_solea$estimate # Observed correlation coefficient
-p_value <- cor_solea$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_solea <- acf(final_df$solea_solea, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$solea_solea))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_solea$acf[2:(n_lag + 1)] # Autocorrelation values for solea
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Spicara
-
-ggscatter(final_df, x = "amo_index", y = "spicara_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_spicara_2 <- ccf(final_df$amo_index, final_df$spicara_spp, lag.max = 2, na.action = na.pass)
-ccf_spicara_2
-
-# Calculate the correlation coefficient between amo_index and spicara
-cor_spicara <- cor.test(final_df$amo_index, final_df$spicara_spp, use = "complete.obs")
-cor_obs <- cor_spicara$estimate # Observed correlation coefficient
-p_value <- cor_spicara$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_spicara <- acf(final_df$spicara_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$spicara_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_spicara$acf[2:(n_lag + 1)] # Autocorrelation values for spicara
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Squalus
-
-ggscatter(final_df, x = "amo_index", y = "squalus_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_squalus_2 <- ccf(final_df$amo_index, final_df$squalus_spp, lag.max = 2, na.action = na.pass)
-ccf_squalus_2
-
-# Calculate the correlation coefficient between amo_index and squalus
-cor_squalus <- cor.test(final_df$amo_index, final_df$squalus_spp, use = "complete.obs")
-cor_obs <- cor_squalus$estimate # Observed correlation coefficient
-p_value <- cor_squalus$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_squalus <- acf(final_df$squalus_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$squalus_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_squalus$acf[2:(n_lag + 1)] # Autocorrelation values for squalus
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-# Squilla mantis
-
-ggscatter(final_df, x = "amo_index", y = "squilla_mantis", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_squilman <- ccf(final_df$amo_index, final_df$squilla_mantis, lag.max = 2, na.action = na.pass)
-ccf_squilman
-
-# Calculate the correlation coefficient between amo_index and squila mantis
-cor_squilman <- cor.test(final_df$amo_index, final_df$squilla_mantis, use = "complete.obs")
-cor_obs <- cor_squilman$estimate # Observed correlation coefficient
-p_value <- cor_squilman$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_squilman <- acf(final_df$squilla_mantis, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$squilla_mantis))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_squilman$acf[2:(n_lag + 1)] # Autocorrelation values for squila mantis
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Trachurus spp
-
-ggscatter(final_df, x = "amo_index", y = "trachurus_spp", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_trachurus_2 <- ccf(final_df$amo_index, final_df$trachurus_spp, lag.max = 2, na.action = na.pass)
-ccf_trachurus_2
-
-# Calculate the correlation coefficient between amo_index and trachurus
-cor_trachurus <- cor.test(final_df$amo_index, final_df$trachurus_spp, use = "complete.obs")
-cor_obs <- cor_trachurus$estimate # Observed correlation coefficient
-p_value <- cor_trachurus$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_trachurus <- acf(final_df$trachurus_spp, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$trachurus_spp))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_trachurus$acf[2:(n_lag + 1)] # Autocorrelation values for trachurus
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# Triglidae
-
-ggscatter(final_df, x = "amo_index", y = "triglidae", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-
-ccf_triglidae_2 <- ccf(final_df$amo_index, final_df$triglidae, lag.max = 2, na.action = na.pass)
-ccf_triglidae_2
-
-# Calculate the correlation coefficient between amo_index and triglidae
-cor_triglidae <- cor.test(final_df$amo_index, final_df$triglidae, use = "complete.obs")
-cor_obs <- cor_triglidae$estimate # Observed correlation coefficient
-p_value <- cor_triglidae$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_triglidae <- acf(final_df$triglidae, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$triglidae))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_triglidae$acf[2:(n_lag + 1)] # Autocorrelation values for triglidae
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# PC1
-ggscatter(final_df, x = "amo_index", y = "Axis1", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_pc1 <- ccf(final_df$amo_index, final_df$Axis1, lag.max = 2, na.action = na.pass)
-ccf_pc1
-
-# Calculate the correlation coefficient between amo_index and PC1
-cor_pc1 <- cor.test(final_df$amo_index, final_df$Axis1, use = "complete.obs")
-cor_obs <- cor_pc1$estimate # Observed correlation coefficient
-p_value <- cor_pc1$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_pc1 <- acf(final_df$Axis1, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$pc1))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_pc1$acf[2:(n_lag + 1)] # Autocorrelation values for pc1
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-# PC2
-ggscatter(final_df, x = "amo_index", y = "Axis2", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "amo", ylab = "Landings")
-
-ccf_pc2 <- ccf(final_df$amo_index, final_df$Axis2, lag.max = 2, na.action = na.pass)
-ccf_pc2
-
-# Calculate the correlation coefficient between amo_index and PC1
-cor_pc2 <- cor.test(final_df$amo_index, final_df$Axis2, use = "complete.obs")
-cor_obs <- cor_pc2$estimate # Observed correlation coefficient
-p_value <- cor_pc2$p.value # P-value
-
-# Calculate the autocorrelation values for each series
-acf_amo <- acf(final_df$amo_index, plot = FALSE)
-acf_pc2 <- acf(final_df$Axis2, plot = FALSE)
-
-# Estimate the effective degrees of freedom
-n <- length(na.omit(cbind(final_df$amo_index, final_df$pc2))) # Number of complete data pairs
-n_lag <- min(n/5, length(acf_amo$acf) - 1) # Maximum number of lags as the minimum of n/5 and the length of the acf vector
-
-# Extract the autocorrelation values from lag 1 to lag n_lag
-rho_xx <- acf_amo$acf[2:(n_lag + 1)] # Autocorrelation values for amo_index
-rho_yy <- acf_pc2$acf[2:(n_lag + 1)] # Autocorrelation values for pc1
-n_star <- n/(1 + 2*sum(rho_xx*rho_yy)) # Effective degrees of freedom
-
-# Calculate the critical correlation value
-alpha <- 0.05 # Significance level
-t_alpha <- qt(alpha/2, n_star - 2, lower.tail = FALSE) # Student's t-distribution
-r_crit <- sqrt(t_alpha^2/(n_star - 2 + t_alpha^2)) # Critical correlation value
-
-# Compare the observed and critical values
-if (abs(cor_obs) > r_crit) {
-  cat("The correlation coefficient is significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-} else {
-  cat("The correlation coefficient is not significant at the", alpha, "level.\n")
-  cat("The observed value is", cor_obs, "and the critical value is", r_crit, ".\n")
-}
-
-
-
-
-
-# Create a data frame with all the correlation results for AMO
-df_amo <- data.frame(
-  species = c("Atherinidae", "Boops boops","Lophius spp", "Micromesistius poutassou", "Mugilidae", "Mullus spp", "Mustelus spp", "Parapenaeus longirostris", "Rajiformes", "Sardinella aurita", "Scomber spp", "Scophthalmidae", "Scorpaenidae", "Sepiidae, Sepiolidae", "Spicara spp", "Squalus spp", "Squilla mantis", "Trachurus spp", "Triglidae", "PC1"),
-  value = c(-0.73, -0.8, 0.43, -0.69, -0.38, 0.68, -0.51, 0.41, -0.69, -0.7, 0.4, -0.6, -0.58, -0.54,-0.76, -0.56, 0.46, -0.67, 0.67, 0.8)
-)
-df_amo
-
-# Arrange the data frame by value
-df_amo <- df_amo[order(df_amo$value),]
-
-# Change the order of factor levels
-df_amo$species <- factor(df_amo$species, levels = df_amo$species)
-
-# Create the horizontal histogram chart with modified x-axis and bar colors
-amo_ccf_plot <- ggplot(df_amo, aes(x = value, y = species, fill = value)) +
-  geom_bar(stat = "identity", color = "black", linewidth = 0.5) +
-  scale_x_continuous(limits = c(-1, 1), expand = c(0,0)) +
-  scale_fill_gradient2(low = "#313695", high = "#d73027", mid = "white", midpoint = 0) +
-  geom_text(aes(label = round(value, 2), x = ifelse(value > 0, value + 0.1, value - 0.1)), 
-            hjust = ifelse(df_amo$value > 0, 0.5, 0.5), 
-            color = "black") +
-  theme(plot.background = element_rect(fill = "white", colour = "white"),
-        panel.background = element_rect(fill = "white"),
-        panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
-        legend.position = "none") +
-  labs(x = "Correlation Coefficient", y = "")
-
-amo_ccf_plot
 
 
 # combine all 6 plots together
