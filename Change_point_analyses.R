@@ -1,5 +1,4 @@
 ################## change point l#################################### 
-setwd("C:/Users/Elvis/Desktop/UHH/PhD project/Change point")
 
 library(readr)
 library(ggplot2)
