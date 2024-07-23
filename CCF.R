@@ -1,6 +1,5 @@
 # Run after the Principal component analysis
 # set working directory
-setwd("C:/Users/Elvis/Desktop/UHH/PhD project/test correlation/analyses")
 
 library(readr)
 library(tidyr)
